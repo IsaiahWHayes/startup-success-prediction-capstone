@@ -36,13 +36,13 @@ After encoding categorical features and initializing a baseline logistic regress
 However, after scaling the data, the second logistic regession model resulted in an accuracy score of 74%.
 
 #### Next steps
-What suggestions do you have for next steps?
+Next, I will reframe the problem as a binary classification task, combining "Acquisitions" and "IPO" outcome classes into a single "Success" category. I excpect this to create a more balanced target variable (outcome), which may lead to improved predictive performance.
 
 #### Outline of project
 
 - [Link to notebook 1](https://github.com/IsaiahWHayes/startup-success-prediction)
 - [Link to notebook 2](https://github.com/IsaiahWHayes/startup-success-prediction)
-- [Link to notebook 3]()
+- [Link to notebook 3](https://github.com/IsaiahWHayes/startup-success-prediction-capstone)
 
 
 ##### Contact and Further Information

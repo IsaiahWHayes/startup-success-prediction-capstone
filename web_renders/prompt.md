@@ -67,6 +67,7 @@ import seaborn as sns
 import numpy as np
 import plotly.express as px
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import mean_squared_error, r2_score
@@ -74,6 +75,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import StandardScaler
+from sklearn.tree import DecisionTreeClassifier
 ```
 
 
@@ -469,7 +471,7 @@ plt.show()
     
 
 
-Several feeatures exhibit a right-skewed histogram. This likely indicates that scaling will be necessary later.
+Several feeatures exhibit a right-skewed histogram. This likely indicates that scaling and log transformations will be necessary later.
 
 Additionally, features like _founder_experience_years_ and _team_size_ display unusually consistnt spikes and uniformity. This potentially means synthetic data.
 
@@ -512,7 +514,7 @@ Furthermore, burn rate revealed a strong relationship with revenue and product t
 
 Since revenue also demonstrates a strong relationship with startup outcomes, these features may indirectly contribute to predicting outcome classifications. Further analysis and modeling will help determine the strength and significance of these relationships.
 
-Finally, the plot demonstrates clear outliers that may require cleaning before modeling.
+Finally, the plot demonstrates possible outliers that may require cleaning before modeling.
 
 
 ```python
@@ -895,6 +897,7 @@ model_data = pd.get_dummies(
 # Modeling
 
 ### Model 1
+Baseline model on raw features + logistic regression
 
 
 ```python
@@ -918,6 +921,18 @@ model = LogisticRegression(random_state = 42, max_iter = 1000)
 model.fit(X_train, y_train)
 ```
 
+    /opt/anaconda3/lib/python3.13/site-packages/sklearn/linear_model/_linear_loss.py:203: RuntimeWarning: divide by zero encountered in matmul
+      raw_prediction = X @ weights.T + intercept  # ndarray, likely C-contiguous
+    /opt/anaconda3/lib/python3.13/site-packages/sklearn/linear_model/_linear_loss.py:203: RuntimeWarning: overflow encountered in matmul
+      raw_prediction = X @ weights.T + intercept  # ndarray, likely C-contiguous
+    /opt/anaconda3/lib/python3.13/site-packages/sklearn/linear_model/_linear_loss.py:203: RuntimeWarning: invalid value encountered in matmul
+      raw_prediction = X @ weights.T + intercept  # ndarray, likely C-contiguous
+    /opt/anaconda3/lib/python3.13/site-packages/sklearn/linear_model/_linear_loss.py:336: RuntimeWarning: divide by zero encountered in matmul
+      grad[:, :n_features] = grad_pointwise.T @ X + l2_reg_strength * weights
+    /opt/anaconda3/lib/python3.13/site-packages/sklearn/linear_model/_linear_loss.py:336: RuntimeWarning: overflow encountered in matmul
+      grad[:, :n_features] = grad_pointwise.T @ X + l2_reg_strength * weights
+    /opt/anaconda3/lib/python3.13/site-packages/sklearn/linear_model/_linear_loss.py:336: RuntimeWarning: invalid value encountered in matmul
+      grad[:, :n_features] = grad_pointwise.T @ X + l2_reg_strength * weights
     /opt/anaconda3/lib/python3.13/site-packages/sklearn/linear_model/_logistic.py:465: ConvergenceWarning: lbfgs failed to converge (status=1):
     STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT.
     
@@ -1356,6 +1371,14 @@ div.sk-label-container:hover .sk-estimator-doc-link.fitted:hover,
 y_predictions = model.predict(X_test)
 ```
 
+    /opt/anaconda3/lib/python3.13/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: divide by zero encountered in matmul
+      ret = a @ b
+    /opt/anaconda3/lib/python3.13/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: overflow encountered in matmul
+      ret = a @ b
+    /opt/anaconda3/lib/python3.13/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: invalid value encountered in matmul
+      ret = a @ b
+
+
 
 ```python
 # Evaluate the model's performance using accuracy_score
@@ -1374,12 +1397,12 @@ print(classification_report(y_test, y_predictions))
 
                   precision    recall  f1-score   support
     
-               0       0.58      0.59      0.58      8467
-               1       0.69      0.71      0.70     11122
-               2       0.23      0.01      0.03       411
+               0       0.58      0.60      0.59      8467
+               1       0.70      0.70      0.70     11122
+               2       0.17      0.02      0.04       411
     
         accuracy                           0.64     20000
-       macro avg       0.50      0.44      0.44     20000
+       macro avg       0.48      0.44      0.44     20000
     weighted avg       0.63      0.64      0.64     20000
     
 
@@ -1405,6 +1428,7 @@ plt.show()
 
 
 ### Model 2
+Scaled features + logistic regression
 
 
 ```python
@@ -1419,9 +1443,23 @@ X_test_scaled = scaler.transform(X_test)
 
 ```python
 # Train a new logistic regression model using the scaled data to explore whether the accuracy improves.
-model_scaled = LogisticRegression(random_state = 42, max_iter = 1000)
-model_scaled.fit(X_train_scaled, y_train)
+model2 = LogisticRegression(random_state = 42, max_iter = 1000)
+model2.fit(X_train_scaled, y_train)
 ```
+
+    /opt/anaconda3/lib/python3.13/site-packages/sklearn/linear_model/_linear_loss.py:203: RuntimeWarning: divide by zero encountered in matmul
+      raw_prediction = X @ weights.T + intercept  # ndarray, likely C-contiguous
+    /opt/anaconda3/lib/python3.13/site-packages/sklearn/linear_model/_linear_loss.py:203: RuntimeWarning: overflow encountered in matmul
+      raw_prediction = X @ weights.T + intercept  # ndarray, likely C-contiguous
+    /opt/anaconda3/lib/python3.13/site-packages/sklearn/linear_model/_linear_loss.py:203: RuntimeWarning: invalid value encountered in matmul
+      raw_prediction = X @ weights.T + intercept  # ndarray, likely C-contiguous
+    /opt/anaconda3/lib/python3.13/site-packages/sklearn/linear_model/_linear_loss.py:336: RuntimeWarning: divide by zero encountered in matmul
+      grad[:, :n_features] = grad_pointwise.T @ X + l2_reg_strength * weights
+    /opt/anaconda3/lib/python3.13/site-packages/sklearn/linear_model/_linear_loss.py:336: RuntimeWarning: overflow encountered in matmul
+      grad[:, :n_features] = grad_pointwise.T @ X + l2_reg_strength * weights
+    /opt/anaconda3/lib/python3.13/site-packages/sklearn/linear_model/_linear_loss.py:336: RuntimeWarning: invalid value encountered in matmul
+      grad[:, :n_features] = grad_pointwise.T @ X + l2_reg_strength * weights
+
 
 
 
@@ -1848,23 +1886,28 @@ div.sk-label-container:hover .sk-estimator-doc-link.fitted:hover,
 
 ```python
 # Make new predictions using the scaled data
-y_prediction_scaled_data = model_scaled.predict(X_test_scaled)
+y_prediction_model2= model2.predict(X_test_scaled)
 
 # Evaluate the model's performance using accuracy_score
-accuracy_scaled_data = accuracy_score(y_test, y_prediction_scaled_data)
+accuracy_scaled_data = accuracy_score(y_test, y_prediction_model2)
 print(f'Accuracy is: {accuracy_scaled_data: .2f}')
 ```
 
     Accuracy is:  0.74
 
 
-Scaling the data did improve the model by 15.625%.
-Next, I'll explore whether log transformations on the heavily right-skewed data discovered in early EDA further improves the model. These include burn_rate_million, revenue_million, and market_size_billion.
+    /opt/anaconda3/lib/python3.13/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: divide by zero encountered in matmul
+      ret = a @ b
+    /opt/anaconda3/lib/python3.13/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: overflow encountered in matmul
+      ret = a @ b
+    /opt/anaconda3/lib/python3.13/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: invalid value encountered in matmul
+      ret = a @ b
+
 
 
 ```python
 # Explore the classification report related to the scaled data.
-print(classification_report(y_test, y_prediction_scaled_data))
+print(classification_report(y_test, y_prediction_model2))
 ```
 
                   precision    recall  f1-score   support
@@ -1878,3 +1921,1779 @@ print(classification_report(y_test, y_prediction_scaled_data))
     weighted avg       0.74      0.74      0.74     20000
     
 
+
+Scaling the data did improve the model by 15.625%.
+Next, I'll explore whether log transformations on the heavily right-skewed data discovered in early EDA further improves the model. These include burn_rate_million, revenue_million, and market_size_billion.
+
+### Model 3
+Log transformation of right-skewed features + scaled data + logistic regression
+
+
+```python
+# Explore the data statistics of the right-skewed features to better understand outliers before applying a log transformation.
+data_numeric[['market_size_billion',
+              'revenue_million',
+              'burn_rate_million',
+              'product_traction_users']].describe(
+                  percentiles=[0.95, 0.99, 0.999]
+              ).T
+```
+
+
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>count</th>
+      <th>mean</th>
+      <th>std</th>
+      <th>min</th>
+      <th>50%</th>
+      <th>95%</th>
+      <th>99%</th>
+      <th>99.9%</th>
+      <th>max</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>market_size_billion</th>
+      <td>100000.0</td>
+      <td>33.203875</td>
+      <td>43.034753</td>
+      <td>0.288738</td>
+      <td>20.158063</td>
+      <td>1.047059e+02</td>
+      <td>2.073400e+02</td>
+      <td>4.464779e+02</td>
+      <td>1.072434e+03</td>
+    </tr>
+    <tr>
+      <th>revenue_million</th>
+      <td>100000.0</td>
+      <td>782819.143683</td>
+      <td>608506.910922</td>
+      <td>1344.810178</td>
+      <td>621362.389435</td>
+      <td>2.005913e+06</td>
+      <td>2.700754e+06</td>
+      <td>3.396290e+06</td>
+      <td>4.168443e+06</td>
+    </tr>
+    <tr>
+      <th>burn_rate_million</th>
+      <td>100000.0</td>
+      <td>16.776213</td>
+      <td>15.711368</td>
+      <td>0.279763</td>
+      <td>12.169059</td>
+      <td>4.558278e+01</td>
+      <td>7.817620e+01</td>
+      <td>1.371230e+02</td>
+      <td>3.574915e+02</td>
+    </tr>
+    <tr>
+      <th>product_traction_users</th>
+      <td>100000.0</td>
+      <td>285422.832730</td>
+      <td>159323.885405</td>
+      <td>668.000000</td>
+      <td>264989.500000</td>
+      <td>5.799981e+05</td>
+      <td>7.030607e+05</td>
+      <td>8.178028e+05</td>
+      <td>9.152030e+05</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+
+```python
+# Create a new set of log transformed features
+model_data['log_market_size'] = np.log1p(model_data['market_size_billion'])
+model_data['log_revenue'] = np.log1p(model_data['revenue_million'])
+model_data['log_burn_rate'] = np.log1p(model_data['burn_rate_million'])
+model_data['log_product_traction'] = np.log1p(model_data['product_traction_users'])
+```
+
+
+```python
+# Place the new log feeatures in a variable.
+log_features = model_data[
+    ['log_market_size',
+    'log_revenue',
+    'log_burn_rate',
+    'log_product_traction']
+]
+
+log_features.hist(figsize = (10, 7), bins = 20)
+plt.tight_layout()
+plt.show()
+```
+
+
+    
+![png](prompt_files/prompt_61_0.png)
+    
+
+
+Logarithmic transformations successfully reduced the strong right skew observations, but mildly left skewed revenue and burn rate.
+However, this is not considered problematic as the goal was simply to reduce extreme skewness that could negatively impact the model. That was accomplished.
+
+
+```python
+# Build a new dataset with the log transformed features and target variable
+X = model_data.drop(columns = [
+    'outcome',
+    'market_size_billion',
+    'revenue_million',
+    'burn_rate_million',
+    'product_traction_users'
+])
+
+y = model_data['outcome']
+```
+
+
+```python
+# Split the log transformed data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 42, stratify = y)
+```
+
+
+```python
+# Scale the log transformed data using StandardScaler()
+scaler_model3 = StandardScaler()
+
+# Scale the training and testing data
+X_train_scaled_model3 = scaler_model3.fit_transform(X_train)
+X_test_scaled_model3 = scaler_model3.transform(X_test)
+```
+
+
+```python
+# Train a new logistic regression model (Model 3) using the log transformed and scaled data to explore whether the accuracy improves.
+model3 = LogisticRegression(random_state = 42, max_iter = 1000)
+model3.fit(X_train_scaled_model3, y_train)
+```
+
+    /opt/anaconda3/lib/python3.13/site-packages/sklearn/linear_model/_linear_loss.py:203: RuntimeWarning: divide by zero encountered in matmul
+      raw_prediction = X @ weights.T + intercept  # ndarray, likely C-contiguous
+    /opt/anaconda3/lib/python3.13/site-packages/sklearn/linear_model/_linear_loss.py:203: RuntimeWarning: overflow encountered in matmul
+      raw_prediction = X @ weights.T + intercept  # ndarray, likely C-contiguous
+    /opt/anaconda3/lib/python3.13/site-packages/sklearn/linear_model/_linear_loss.py:203: RuntimeWarning: invalid value encountered in matmul
+      raw_prediction = X @ weights.T + intercept  # ndarray, likely C-contiguous
+    /opt/anaconda3/lib/python3.13/site-packages/sklearn/linear_model/_linear_loss.py:336: RuntimeWarning: divide by zero encountered in matmul
+      grad[:, :n_features] = grad_pointwise.T @ X + l2_reg_strength * weights
+    /opt/anaconda3/lib/python3.13/site-packages/sklearn/linear_model/_linear_loss.py:336: RuntimeWarning: overflow encountered in matmul
+      grad[:, :n_features] = grad_pointwise.T @ X + l2_reg_strength * weights
+    /opt/anaconda3/lib/python3.13/site-packages/sklearn/linear_model/_linear_loss.py:336: RuntimeWarning: invalid value encountered in matmul
+      grad[:, :n_features] = grad_pointwise.T @ X + l2_reg_strength * weights
+
+
+
+
+
+<style>#sk-container-id-3 {
+  /* Definition of color scheme common for light and dark mode */
+  --sklearn-color-text: #000;
+  --sklearn-color-text-muted: #666;
+  --sklearn-color-line: gray;
+  /* Definition of color scheme for unfitted estimators */
+  --sklearn-color-unfitted-level-0: #fff5e6;
+  --sklearn-color-unfitted-level-1: #f6e4d2;
+  --sklearn-color-unfitted-level-2: #ffe0b3;
+  --sklearn-color-unfitted-level-3: chocolate;
+  /* Definition of color scheme for fitted estimators */
+  --sklearn-color-fitted-level-0: #f0f8ff;
+  --sklearn-color-fitted-level-1: #d4ebff;
+  --sklearn-color-fitted-level-2: #b3dbfd;
+  --sklearn-color-fitted-level-3: cornflowerblue;
+
+  /* Specific color for light theme */
+  --sklearn-color-text-on-default-background: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, black)));
+  --sklearn-color-background: var(--sg-background-color, var(--theme-background, var(--jp-layout-color0, white)));
+  --sklearn-color-border-box: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, black)));
+  --sklearn-color-icon: #696969;
+
+  @media (prefers-color-scheme: dark) {
+    /* Redefinition of color scheme for dark theme */
+    --sklearn-color-text-on-default-background: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, white)));
+    --sklearn-color-background: var(--sg-background-color, var(--theme-background, var(--jp-layout-color0, #111)));
+    --sklearn-color-border-box: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, white)));
+    --sklearn-color-icon: #878787;
+  }
+}
+
+#sk-container-id-3 {
+  color: var(--sklearn-color-text);
+}
+
+#sk-container-id-3 pre {
+  padding: 0;
+}
+
+#sk-container-id-3 input.sk-hidden--visually {
+  border: 0;
+  clip: rect(1px 1px 1px 1px);
+  clip: rect(1px, 1px, 1px, 1px);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+}
+
+#sk-container-id-3 div.sk-dashed-wrapped {
+  border: 1px dashed var(--sklearn-color-line);
+  margin: 0 0.4em 0.5em 0.4em;
+  box-sizing: border-box;
+  padding-bottom: 0.4em;
+  background-color: var(--sklearn-color-background);
+}
+
+#sk-container-id-3 div.sk-container {
+  /* jupyter's `normalize.less` sets `[hidden] { display: none; }`
+     but bootstrap.min.css set `[hidden] { display: none !important; }`
+     so we also need the `!important` here to be able to override the
+     default hidden behavior on the sphinx rendered scikit-learn.org.
+     See: https://github.com/scikit-learn/scikit-learn/issues/21755 */
+  display: inline-block !important;
+  position: relative;
+}
+
+#sk-container-id-3 div.sk-text-repr-fallback {
+  display: none;
+}
+
+div.sk-parallel-item,
+div.sk-serial,
+div.sk-item {
+  /* draw centered vertical line to link estimators */
+  background-image: linear-gradient(var(--sklearn-color-text-on-default-background), var(--sklearn-color-text-on-default-background));
+  background-size: 2px 100%;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
+/* Parallel-specific style estimator block */
+
+#sk-container-id-3 div.sk-parallel-item::after {
+  content: "";
+  width: 100%;
+  border-bottom: 2px solid var(--sklearn-color-text-on-default-background);
+  flex-grow: 1;
+}
+
+#sk-container-id-3 div.sk-parallel {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  background-color: var(--sklearn-color-background);
+  position: relative;
+}
+
+#sk-container-id-3 div.sk-parallel-item {
+  display: flex;
+  flex-direction: column;
+}
+
+#sk-container-id-3 div.sk-parallel-item:first-child::after {
+  align-self: flex-end;
+  width: 50%;
+}
+
+#sk-container-id-3 div.sk-parallel-item:last-child::after {
+  align-self: flex-start;
+  width: 50%;
+}
+
+#sk-container-id-3 div.sk-parallel-item:only-child::after {
+  width: 0;
+}
+
+/* Serial-specific style estimator block */
+
+#sk-container-id-3 div.sk-serial {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: var(--sklearn-color-background);
+  padding-right: 1em;
+  padding-left: 1em;
+}
+
+
+/* Toggleable style: style used for estimator/Pipeline/ColumnTransformer box that is
+clickable and can be expanded/collapsed.
+- Pipeline and ColumnTransformer use this feature and define the default style
+- Estimators will overwrite some part of the style using the `sk-estimator` class
+*/
+
+/* Pipeline and ColumnTransformer style (default) */
+
+#sk-container-id-3 div.sk-toggleable {
+  /* Default theme specific background. It is overwritten whether we have a
+  specific estimator or a Pipeline/ColumnTransformer */
+  background-color: var(--sklearn-color-background);
+}
+
+/* Toggleable label */
+#sk-container-id-3 label.sk-toggleable__label {
+  cursor: pointer;
+  display: flex;
+  width: 100%;
+  margin-bottom: 0;
+  padding: 0.5em;
+  box-sizing: border-box;
+  text-align: center;
+  align-items: start;
+  justify-content: space-between;
+  gap: 0.5em;
+}
+
+#sk-container-id-3 label.sk-toggleable__label .caption {
+  font-size: 0.6rem;
+  font-weight: lighter;
+  color: var(--sklearn-color-text-muted);
+}
+
+#sk-container-id-3 label.sk-toggleable__label-arrow:before {
+  /* Arrow on the left of the label */
+  content: "▸";
+  float: left;
+  margin-right: 0.25em;
+  color: var(--sklearn-color-icon);
+}
+
+#sk-container-id-3 label.sk-toggleable__label-arrow:hover:before {
+  color: var(--sklearn-color-text);
+}
+
+/* Toggleable content - dropdown */
+
+#sk-container-id-3 div.sk-toggleable__content {
+  max-height: 0;
+  max-width: 0;
+  overflow: hidden;
+  text-align: left;
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-0);
+}
+
+#sk-container-id-3 div.sk-toggleable__content.fitted {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-0);
+}
+
+#sk-container-id-3 div.sk-toggleable__content pre {
+  margin: 0.2em;
+  border-radius: 0.25em;
+  color: var(--sklearn-color-text);
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-0);
+}
+
+#sk-container-id-3 div.sk-toggleable__content.fitted pre {
+  /* unfitted */
+  background-color: var(--sklearn-color-fitted-level-0);
+}
+
+#sk-container-id-3 input.sk-toggleable__control:checked~div.sk-toggleable__content {
+  /* Expand drop-down */
+  max-height: 200px;
+  max-width: 100%;
+  overflow: auto;
+}
+
+#sk-container-id-3 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {
+  content: "▾";
+}
+
+/* Pipeline/ColumnTransformer-specific style */
+
+#sk-container-id-3 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  color: var(--sklearn-color-text);
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+#sk-container-id-3 div.sk-label.fitted input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+/* Estimator-specific style */
+
+/* Colorize estimator box */
+#sk-container-id-3 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+#sk-container-id-3 div.sk-estimator.fitted input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+#sk-container-id-3 div.sk-label label.sk-toggleable__label,
+#sk-container-id-3 div.sk-label label {
+  /* The background is the default theme color */
+  color: var(--sklearn-color-text-on-default-background);
+}
+
+/* On hover, darken the color of the background */
+#sk-container-id-3 div.sk-label:hover label.sk-toggleable__label {
+  color: var(--sklearn-color-text);
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+/* Label box, darken color on hover, fitted */
+#sk-container-id-3 div.sk-label.fitted:hover label.sk-toggleable__label.fitted {
+  color: var(--sklearn-color-text);
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+/* Estimator label */
+
+#sk-container-id-3 div.sk-label label {
+  font-family: monospace;
+  font-weight: bold;
+  display: inline-block;
+  line-height: 1.2em;
+}
+
+#sk-container-id-3 div.sk-label-container {
+  text-align: center;
+}
+
+/* Estimator-specific */
+#sk-container-id-3 div.sk-estimator {
+  font-family: monospace;
+  border: 1px dotted var(--sklearn-color-border-box);
+  border-radius: 0.25em;
+  box-sizing: border-box;
+  margin-bottom: 0.5em;
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-0);
+}
+
+#sk-container-id-3 div.sk-estimator.fitted {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-0);
+}
+
+/* on hover */
+#sk-container-id-3 div.sk-estimator:hover {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+#sk-container-id-3 div.sk-estimator.fitted:hover {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+/* Specification for estimator info (e.g. "i" and "?") */
+
+/* Common style for "i" and "?" */
+
+.sk-estimator-doc-link,
+a:link.sk-estimator-doc-link,
+a:visited.sk-estimator-doc-link {
+  float: right;
+  font-size: smaller;
+  line-height: 1em;
+  font-family: monospace;
+  background-color: var(--sklearn-color-background);
+  border-radius: 1em;
+  height: 1em;
+  width: 1em;
+  text-decoration: none !important;
+  margin-left: 0.5em;
+  text-align: center;
+  /* unfitted */
+  border: var(--sklearn-color-unfitted-level-1) 1pt solid;
+  color: var(--sklearn-color-unfitted-level-1);
+}
+
+.sk-estimator-doc-link.fitted,
+a:link.sk-estimator-doc-link.fitted,
+a:visited.sk-estimator-doc-link.fitted {
+  /* fitted */
+  border: var(--sklearn-color-fitted-level-1) 1pt solid;
+  color: var(--sklearn-color-fitted-level-1);
+}
+
+/* On hover */
+div.sk-estimator:hover .sk-estimator-doc-link:hover,
+.sk-estimator-doc-link:hover,
+div.sk-label-container:hover .sk-estimator-doc-link:hover,
+.sk-estimator-doc-link:hover {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-3);
+  color: var(--sklearn-color-background);
+  text-decoration: none;
+}
+
+div.sk-estimator.fitted:hover .sk-estimator-doc-link.fitted:hover,
+.sk-estimator-doc-link.fitted:hover,
+div.sk-label-container:hover .sk-estimator-doc-link.fitted:hover,
+.sk-estimator-doc-link.fitted:hover {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-3);
+  color: var(--sklearn-color-background);
+  text-decoration: none;
+}
+
+/* Span, style for the box shown on hovering the info icon */
+.sk-estimator-doc-link span {
+  display: none;
+  z-index: 9999;
+  position: relative;
+  font-weight: normal;
+  right: .2ex;
+  padding: .5ex;
+  margin: .5ex;
+  width: min-content;
+  min-width: 20ex;
+  max-width: 50ex;
+  color: var(--sklearn-color-text);
+  box-shadow: 2pt 2pt 4pt #999;
+  /* unfitted */
+  background: var(--sklearn-color-unfitted-level-0);
+  border: .5pt solid var(--sklearn-color-unfitted-level-3);
+}
+
+.sk-estimator-doc-link.fitted span {
+  /* fitted */
+  background: var(--sklearn-color-fitted-level-0);
+  border: var(--sklearn-color-fitted-level-3);
+}
+
+.sk-estimator-doc-link:hover span {
+  display: block;
+}
+
+/* "?"-specific style due to the `<a>` HTML tag */
+
+#sk-container-id-3 a.estimator_doc_link {
+  float: right;
+  font-size: 1rem;
+  line-height: 1em;
+  font-family: monospace;
+  background-color: var(--sklearn-color-background);
+  border-radius: 1rem;
+  height: 1rem;
+  width: 1rem;
+  text-decoration: none;
+  /* unfitted */
+  color: var(--sklearn-color-unfitted-level-1);
+  border: var(--sklearn-color-unfitted-level-1) 1pt solid;
+}
+
+#sk-container-id-3 a.estimator_doc_link.fitted {
+  /* fitted */
+  border: var(--sklearn-color-fitted-level-1) 1pt solid;
+  color: var(--sklearn-color-fitted-level-1);
+}
+
+/* On hover */
+#sk-container-id-3 a.estimator_doc_link:hover {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-3);
+  color: var(--sklearn-color-background);
+  text-decoration: none;
+}
+
+#sk-container-id-3 a.estimator_doc_link.fitted:hover {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-3);
+}
+</style><div id="sk-container-id-3" class="sk-top-container"><div class="sk-text-repr-fallback"><pre>LogisticRegression(max_iter=1000, random_state=42)</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class="sk-container" hidden><div class="sk-item"><div class="sk-estimator fitted sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-3" type="checkbox" checked><label for="sk-estimator-id-3" class="sk-toggleable__label fitted sk-toggleable__label-arrow"><div><div>LogisticRegression</div></div><div><a class="sk-estimator-doc-link fitted" rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.6/modules/generated/sklearn.linear_model.LogisticRegression.html">?<span>Documentation for LogisticRegression</span></a><span class="sk-estimator-doc-link fitted">i<span>Fitted</span></span></div></label><div class="sk-toggleable__content fitted"><pre>LogisticRegression(max_iter=1000, random_state=42)</pre></div> </div></div></div></div>
+
+
+
+
+```python
+# Make new predictions using the scaled data
+y_prediction_model3 = model3.predict(X_test_scaled_model3)
+
+# Evaluate the model's performance using accuracy_score
+accuracy_model3 = accuracy_score(y_test, y_prediction_model3)
+print(f'Accuracy is: {accuracy_model3: .2f}')
+```
+
+    Accuracy is:  0.74
+
+
+    /opt/anaconda3/lib/python3.13/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: divide by zero encountered in matmul
+      ret = a @ b
+    /opt/anaconda3/lib/python3.13/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: overflow encountered in matmul
+      ret = a @ b
+    /opt/anaconda3/lib/python3.13/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: invalid value encountered in matmul
+      ret = a @ b
+
+
+
+```python
+# Explore the classification report related to log transformed and scaled data.
+print(classification_report(y_test, y_prediction_model3))
+```
+
+                  precision    recall  f1-score   support
+    
+               0       0.70      0.69      0.69      8467
+               1       0.77      0.80      0.79     11122
+               2       0.64      0.22      0.32       411
+    
+        accuracy                           0.74     20000
+       macro avg       0.70      0.57      0.60     20000
+    weighted avg       0.74      0.74      0.74     20000
+    
+
+
+Overall, the accuracy performance of Model 3 was unchanged when compared to the results of Model 2.
+The transformed features provided no additional predictive value for the logistic regression model.
+The biggest weeakness across all 3 models is the low recall of the class 2 (IPO) outcome. It is likely due to an imbalance of classifications where class 2 makes up nearly 2% of the overall data. There may not be enough training data for this classification.
+
+Therefore, a decision tree model may better understand the relationships between features.
+
+### Model 4
+Decision Tree baseline model
+
+
+```python
+# Build a basic decision tree model to explore its performance capabilities in comparison to logistic regression.
+
+# Split the features from the target variable.
+X = model_data.drop(columns = [
+    'outcome',
+    'market_size_billion',
+    'revenue_million',
+    'burn_rate_million',
+    'product_traction_users'
+])
+
+y = model_data['outcome']
+```
+
+
+```python
+# SPlit the training and testing data.
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 42, stratify = y)
+```
+
+
+```python
+# Train the baseline decision tree model
+tree_model4 = DecisionTreeClassifier(random_state = 42)
+tree_model4.fit(X_train, y_train)
+```
+
+
+
+
+<style>#sk-container-id-4 {
+  /* Definition of color scheme common for light and dark mode */
+  --sklearn-color-text: #000;
+  --sklearn-color-text-muted: #666;
+  --sklearn-color-line: gray;
+  /* Definition of color scheme for unfitted estimators */
+  --sklearn-color-unfitted-level-0: #fff5e6;
+  --sklearn-color-unfitted-level-1: #f6e4d2;
+  --sklearn-color-unfitted-level-2: #ffe0b3;
+  --sklearn-color-unfitted-level-3: chocolate;
+  /* Definition of color scheme for fitted estimators */
+  --sklearn-color-fitted-level-0: #f0f8ff;
+  --sklearn-color-fitted-level-1: #d4ebff;
+  --sklearn-color-fitted-level-2: #b3dbfd;
+  --sklearn-color-fitted-level-3: cornflowerblue;
+
+  /* Specific color for light theme */
+  --sklearn-color-text-on-default-background: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, black)));
+  --sklearn-color-background: var(--sg-background-color, var(--theme-background, var(--jp-layout-color0, white)));
+  --sklearn-color-border-box: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, black)));
+  --sklearn-color-icon: #696969;
+
+  @media (prefers-color-scheme: dark) {
+    /* Redefinition of color scheme for dark theme */
+    --sklearn-color-text-on-default-background: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, white)));
+    --sklearn-color-background: var(--sg-background-color, var(--theme-background, var(--jp-layout-color0, #111)));
+    --sklearn-color-border-box: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, white)));
+    --sklearn-color-icon: #878787;
+  }
+}
+
+#sk-container-id-4 {
+  color: var(--sklearn-color-text);
+}
+
+#sk-container-id-4 pre {
+  padding: 0;
+}
+
+#sk-container-id-4 input.sk-hidden--visually {
+  border: 0;
+  clip: rect(1px 1px 1px 1px);
+  clip: rect(1px, 1px, 1px, 1px);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+}
+
+#sk-container-id-4 div.sk-dashed-wrapped {
+  border: 1px dashed var(--sklearn-color-line);
+  margin: 0 0.4em 0.5em 0.4em;
+  box-sizing: border-box;
+  padding-bottom: 0.4em;
+  background-color: var(--sklearn-color-background);
+}
+
+#sk-container-id-4 div.sk-container {
+  /* jupyter's `normalize.less` sets `[hidden] { display: none; }`
+     but bootstrap.min.css set `[hidden] { display: none !important; }`
+     so we also need the `!important` here to be able to override the
+     default hidden behavior on the sphinx rendered scikit-learn.org.
+     See: https://github.com/scikit-learn/scikit-learn/issues/21755 */
+  display: inline-block !important;
+  position: relative;
+}
+
+#sk-container-id-4 div.sk-text-repr-fallback {
+  display: none;
+}
+
+div.sk-parallel-item,
+div.sk-serial,
+div.sk-item {
+  /* draw centered vertical line to link estimators */
+  background-image: linear-gradient(var(--sklearn-color-text-on-default-background), var(--sklearn-color-text-on-default-background));
+  background-size: 2px 100%;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
+/* Parallel-specific style estimator block */
+
+#sk-container-id-4 div.sk-parallel-item::after {
+  content: "";
+  width: 100%;
+  border-bottom: 2px solid var(--sklearn-color-text-on-default-background);
+  flex-grow: 1;
+}
+
+#sk-container-id-4 div.sk-parallel {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  background-color: var(--sklearn-color-background);
+  position: relative;
+}
+
+#sk-container-id-4 div.sk-parallel-item {
+  display: flex;
+  flex-direction: column;
+}
+
+#sk-container-id-4 div.sk-parallel-item:first-child::after {
+  align-self: flex-end;
+  width: 50%;
+}
+
+#sk-container-id-4 div.sk-parallel-item:last-child::after {
+  align-self: flex-start;
+  width: 50%;
+}
+
+#sk-container-id-4 div.sk-parallel-item:only-child::after {
+  width: 0;
+}
+
+/* Serial-specific style estimator block */
+
+#sk-container-id-4 div.sk-serial {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: var(--sklearn-color-background);
+  padding-right: 1em;
+  padding-left: 1em;
+}
+
+
+/* Toggleable style: style used for estimator/Pipeline/ColumnTransformer box that is
+clickable and can be expanded/collapsed.
+- Pipeline and ColumnTransformer use this feature and define the default style
+- Estimators will overwrite some part of the style using the `sk-estimator` class
+*/
+
+/* Pipeline and ColumnTransformer style (default) */
+
+#sk-container-id-4 div.sk-toggleable {
+  /* Default theme specific background. It is overwritten whether we have a
+  specific estimator or a Pipeline/ColumnTransformer */
+  background-color: var(--sklearn-color-background);
+}
+
+/* Toggleable label */
+#sk-container-id-4 label.sk-toggleable__label {
+  cursor: pointer;
+  display: flex;
+  width: 100%;
+  margin-bottom: 0;
+  padding: 0.5em;
+  box-sizing: border-box;
+  text-align: center;
+  align-items: start;
+  justify-content: space-between;
+  gap: 0.5em;
+}
+
+#sk-container-id-4 label.sk-toggleable__label .caption {
+  font-size: 0.6rem;
+  font-weight: lighter;
+  color: var(--sklearn-color-text-muted);
+}
+
+#sk-container-id-4 label.sk-toggleable__label-arrow:before {
+  /* Arrow on the left of the label */
+  content: "▸";
+  float: left;
+  margin-right: 0.25em;
+  color: var(--sklearn-color-icon);
+}
+
+#sk-container-id-4 label.sk-toggleable__label-arrow:hover:before {
+  color: var(--sklearn-color-text);
+}
+
+/* Toggleable content - dropdown */
+
+#sk-container-id-4 div.sk-toggleable__content {
+  max-height: 0;
+  max-width: 0;
+  overflow: hidden;
+  text-align: left;
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-0);
+}
+
+#sk-container-id-4 div.sk-toggleable__content.fitted {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-0);
+}
+
+#sk-container-id-4 div.sk-toggleable__content pre {
+  margin: 0.2em;
+  border-radius: 0.25em;
+  color: var(--sklearn-color-text);
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-0);
+}
+
+#sk-container-id-4 div.sk-toggleable__content.fitted pre {
+  /* unfitted */
+  background-color: var(--sklearn-color-fitted-level-0);
+}
+
+#sk-container-id-4 input.sk-toggleable__control:checked~div.sk-toggleable__content {
+  /* Expand drop-down */
+  max-height: 200px;
+  max-width: 100%;
+  overflow: auto;
+}
+
+#sk-container-id-4 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {
+  content: "▾";
+}
+
+/* Pipeline/ColumnTransformer-specific style */
+
+#sk-container-id-4 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  color: var(--sklearn-color-text);
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+#sk-container-id-4 div.sk-label.fitted input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+/* Estimator-specific style */
+
+/* Colorize estimator box */
+#sk-container-id-4 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+#sk-container-id-4 div.sk-estimator.fitted input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+#sk-container-id-4 div.sk-label label.sk-toggleable__label,
+#sk-container-id-4 div.sk-label label {
+  /* The background is the default theme color */
+  color: var(--sklearn-color-text-on-default-background);
+}
+
+/* On hover, darken the color of the background */
+#sk-container-id-4 div.sk-label:hover label.sk-toggleable__label {
+  color: var(--sklearn-color-text);
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+/* Label box, darken color on hover, fitted */
+#sk-container-id-4 div.sk-label.fitted:hover label.sk-toggleable__label.fitted {
+  color: var(--sklearn-color-text);
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+/* Estimator label */
+
+#sk-container-id-4 div.sk-label label {
+  font-family: monospace;
+  font-weight: bold;
+  display: inline-block;
+  line-height: 1.2em;
+}
+
+#sk-container-id-4 div.sk-label-container {
+  text-align: center;
+}
+
+/* Estimator-specific */
+#sk-container-id-4 div.sk-estimator {
+  font-family: monospace;
+  border: 1px dotted var(--sklearn-color-border-box);
+  border-radius: 0.25em;
+  box-sizing: border-box;
+  margin-bottom: 0.5em;
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-0);
+}
+
+#sk-container-id-4 div.sk-estimator.fitted {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-0);
+}
+
+/* on hover */
+#sk-container-id-4 div.sk-estimator:hover {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+#sk-container-id-4 div.sk-estimator.fitted:hover {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+/* Specification for estimator info (e.g. "i" and "?") */
+
+/* Common style for "i" and "?" */
+
+.sk-estimator-doc-link,
+a:link.sk-estimator-doc-link,
+a:visited.sk-estimator-doc-link {
+  float: right;
+  font-size: smaller;
+  line-height: 1em;
+  font-family: monospace;
+  background-color: var(--sklearn-color-background);
+  border-radius: 1em;
+  height: 1em;
+  width: 1em;
+  text-decoration: none !important;
+  margin-left: 0.5em;
+  text-align: center;
+  /* unfitted */
+  border: var(--sklearn-color-unfitted-level-1) 1pt solid;
+  color: var(--sklearn-color-unfitted-level-1);
+}
+
+.sk-estimator-doc-link.fitted,
+a:link.sk-estimator-doc-link.fitted,
+a:visited.sk-estimator-doc-link.fitted {
+  /* fitted */
+  border: var(--sklearn-color-fitted-level-1) 1pt solid;
+  color: var(--sklearn-color-fitted-level-1);
+}
+
+/* On hover */
+div.sk-estimator:hover .sk-estimator-doc-link:hover,
+.sk-estimator-doc-link:hover,
+div.sk-label-container:hover .sk-estimator-doc-link:hover,
+.sk-estimator-doc-link:hover {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-3);
+  color: var(--sklearn-color-background);
+  text-decoration: none;
+}
+
+div.sk-estimator.fitted:hover .sk-estimator-doc-link.fitted:hover,
+.sk-estimator-doc-link.fitted:hover,
+div.sk-label-container:hover .sk-estimator-doc-link.fitted:hover,
+.sk-estimator-doc-link.fitted:hover {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-3);
+  color: var(--sklearn-color-background);
+  text-decoration: none;
+}
+
+/* Span, style for the box shown on hovering the info icon */
+.sk-estimator-doc-link span {
+  display: none;
+  z-index: 9999;
+  position: relative;
+  font-weight: normal;
+  right: .2ex;
+  padding: .5ex;
+  margin: .5ex;
+  width: min-content;
+  min-width: 20ex;
+  max-width: 50ex;
+  color: var(--sklearn-color-text);
+  box-shadow: 2pt 2pt 4pt #999;
+  /* unfitted */
+  background: var(--sklearn-color-unfitted-level-0);
+  border: .5pt solid var(--sklearn-color-unfitted-level-3);
+}
+
+.sk-estimator-doc-link.fitted span {
+  /* fitted */
+  background: var(--sklearn-color-fitted-level-0);
+  border: var(--sklearn-color-fitted-level-3);
+}
+
+.sk-estimator-doc-link:hover span {
+  display: block;
+}
+
+/* "?"-specific style due to the `<a>` HTML tag */
+
+#sk-container-id-4 a.estimator_doc_link {
+  float: right;
+  font-size: 1rem;
+  line-height: 1em;
+  font-family: monospace;
+  background-color: var(--sklearn-color-background);
+  border-radius: 1rem;
+  height: 1rem;
+  width: 1rem;
+  text-decoration: none;
+  /* unfitted */
+  color: var(--sklearn-color-unfitted-level-1);
+  border: var(--sklearn-color-unfitted-level-1) 1pt solid;
+}
+
+#sk-container-id-4 a.estimator_doc_link.fitted {
+  /* fitted */
+  border: var(--sklearn-color-fitted-level-1) 1pt solid;
+  color: var(--sklearn-color-fitted-level-1);
+}
+
+/* On hover */
+#sk-container-id-4 a.estimator_doc_link:hover {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-3);
+  color: var(--sklearn-color-background);
+  text-decoration: none;
+}
+
+#sk-container-id-4 a.estimator_doc_link.fitted:hover {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-3);
+}
+</style><div id="sk-container-id-4" class="sk-top-container"><div class="sk-text-repr-fallback"><pre>DecisionTreeClassifier(random_state=42)</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class="sk-container" hidden><div class="sk-item"><div class="sk-estimator fitted sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-4" type="checkbox" checked><label for="sk-estimator-id-4" class="sk-toggleable__label fitted sk-toggleable__label-arrow"><div><div>DecisionTreeClassifier</div></div><div><a class="sk-estimator-doc-link fitted" rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.6/modules/generated/sklearn.tree.DecisionTreeClassifier.html">?<span>Documentation for DecisionTreeClassifier</span></a><span class="sk-estimator-doc-link fitted">i<span>Fitted</span></span></div></label><div class="sk-toggleable__content fitted"><pre>DecisionTreeClassifier(random_state=42)</pre></div> </div></div></div></div>
+
+
+
+
+```python
+# Generate predictions on the test set
+y_predictions_tree4 = tree_model4.predict(X_test)
+
+```
+
+
+```python
+# Evaluate the performance using accuracy_score
+accuracy_tree4 = accuracy_score(y_test, y_predictions_tree4)
+print(f"Accuracy is: {accuracy_tree4: .2f}")
+```
+
+    Accuracy is:  0.64
+
+
+
+```python
+# Explore the classification report related to the decision tree model.
+print(classification_report(y_test, y_predictions_tree4))
+```
+
+                  precision    recall  f1-score   support
+    
+               0       0.58      0.58      0.58      8467
+               1       0.70      0.70      0.70     11122
+               2       0.30      0.32      0.31       411
+    
+        accuracy                           0.64     20000
+       macro avg       0.53      0.53      0.53     20000
+    weighted avg       0.64      0.64      0.64     20000
+    
+
+
+Baseline Decision Tree model did not perform better than the logistic regression Model 2 or Model 3. However, the class 2 (IPO) outcome had a recognizable increase in Recall. In fact, it is the highest class 2 recall of all four models built thus far. The recall recorded from the Decision Tree presented 45% improvement from Model 3.
+
+Nonetheless, the overall accuracy score (64%) was a recognizable decrease from the highest accuracy score of 74% produced from previous models.
+
+Next, Model 5 will include a grid search function to identify the best parameters for the Decision Tree model. Additionally, the model will be focus on optimizing for the F1 scoring model. By optimizing for F1, the Decision Tree model will treat class 2 (IPO) with the same weight of importance as classes 0 and 1 during training. Ideally, this should improve the F1 score, hopefully increasing our highest acheived accuracy score.
+
+### Model 5
+Decision Tree + GridSearchCV + F1 scoring model
+
+
+```python
+# Create a parameter grid for tuning the decision tree model in hopes of improving performance.
+param_grid = {
+    'max_depth': [3, 5, 7, 10, 15],
+    'min_samples_split': [2, 5, 10, 20],
+    'min_samples_leaf': [1, 2, 5, 10],
+    'class_weight': [None, 'balanced']
+}
+```
+
+
+```python
+# Create the grid search object. This will use the parameter grid and the f1_macro scoring metric.
+grid_model5 = GridSearchCV(
+    DecisionTreeClassifier(random_state = 42),
+    param_grid = param_grid,
+    cv = 5,
+    scoring = 'f1_macro',
+    n_jobs = -1
+)
+
+# Fit the grid search model to the training data.
+grid_model5.fit(X_train, y_train)
+```
+
+
+
+
+<style>#sk-container-id-5 {
+  /* Definition of color scheme common for light and dark mode */
+  --sklearn-color-text: #000;
+  --sklearn-color-text-muted: #666;
+  --sklearn-color-line: gray;
+  /* Definition of color scheme for unfitted estimators */
+  --sklearn-color-unfitted-level-0: #fff5e6;
+  --sklearn-color-unfitted-level-1: #f6e4d2;
+  --sklearn-color-unfitted-level-2: #ffe0b3;
+  --sklearn-color-unfitted-level-3: chocolate;
+  /* Definition of color scheme for fitted estimators */
+  --sklearn-color-fitted-level-0: #f0f8ff;
+  --sklearn-color-fitted-level-1: #d4ebff;
+  --sklearn-color-fitted-level-2: #b3dbfd;
+  --sklearn-color-fitted-level-3: cornflowerblue;
+
+  /* Specific color for light theme */
+  --sklearn-color-text-on-default-background: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, black)));
+  --sklearn-color-background: var(--sg-background-color, var(--theme-background, var(--jp-layout-color0, white)));
+  --sklearn-color-border-box: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, black)));
+  --sklearn-color-icon: #696969;
+
+  @media (prefers-color-scheme: dark) {
+    /* Redefinition of color scheme for dark theme */
+    --sklearn-color-text-on-default-background: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, white)));
+    --sklearn-color-background: var(--sg-background-color, var(--theme-background, var(--jp-layout-color0, #111)));
+    --sklearn-color-border-box: var(--sg-text-color, var(--theme-code-foreground, var(--jp-content-font-color1, white)));
+    --sklearn-color-icon: #878787;
+  }
+}
+
+#sk-container-id-5 {
+  color: var(--sklearn-color-text);
+}
+
+#sk-container-id-5 pre {
+  padding: 0;
+}
+
+#sk-container-id-5 input.sk-hidden--visually {
+  border: 0;
+  clip: rect(1px 1px 1px 1px);
+  clip: rect(1px, 1px, 1px, 1px);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+}
+
+#sk-container-id-5 div.sk-dashed-wrapped {
+  border: 1px dashed var(--sklearn-color-line);
+  margin: 0 0.4em 0.5em 0.4em;
+  box-sizing: border-box;
+  padding-bottom: 0.4em;
+  background-color: var(--sklearn-color-background);
+}
+
+#sk-container-id-5 div.sk-container {
+  /* jupyter's `normalize.less` sets `[hidden] { display: none; }`
+     but bootstrap.min.css set `[hidden] { display: none !important; }`
+     so we also need the `!important` here to be able to override the
+     default hidden behavior on the sphinx rendered scikit-learn.org.
+     See: https://github.com/scikit-learn/scikit-learn/issues/21755 */
+  display: inline-block !important;
+  position: relative;
+}
+
+#sk-container-id-5 div.sk-text-repr-fallback {
+  display: none;
+}
+
+div.sk-parallel-item,
+div.sk-serial,
+div.sk-item {
+  /* draw centered vertical line to link estimators */
+  background-image: linear-gradient(var(--sklearn-color-text-on-default-background), var(--sklearn-color-text-on-default-background));
+  background-size: 2px 100%;
+  background-repeat: no-repeat;
+  background-position: center center;
+}
+
+/* Parallel-specific style estimator block */
+
+#sk-container-id-5 div.sk-parallel-item::after {
+  content: "";
+  width: 100%;
+  border-bottom: 2px solid var(--sklearn-color-text-on-default-background);
+  flex-grow: 1;
+}
+
+#sk-container-id-5 div.sk-parallel {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  background-color: var(--sklearn-color-background);
+  position: relative;
+}
+
+#sk-container-id-5 div.sk-parallel-item {
+  display: flex;
+  flex-direction: column;
+}
+
+#sk-container-id-5 div.sk-parallel-item:first-child::after {
+  align-self: flex-end;
+  width: 50%;
+}
+
+#sk-container-id-5 div.sk-parallel-item:last-child::after {
+  align-self: flex-start;
+  width: 50%;
+}
+
+#sk-container-id-5 div.sk-parallel-item:only-child::after {
+  width: 0;
+}
+
+/* Serial-specific style estimator block */
+
+#sk-container-id-5 div.sk-serial {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: var(--sklearn-color-background);
+  padding-right: 1em;
+  padding-left: 1em;
+}
+
+
+/* Toggleable style: style used for estimator/Pipeline/ColumnTransformer box that is
+clickable and can be expanded/collapsed.
+- Pipeline and ColumnTransformer use this feature and define the default style
+- Estimators will overwrite some part of the style using the `sk-estimator` class
+*/
+
+/* Pipeline and ColumnTransformer style (default) */
+
+#sk-container-id-5 div.sk-toggleable {
+  /* Default theme specific background. It is overwritten whether we have a
+  specific estimator or a Pipeline/ColumnTransformer */
+  background-color: var(--sklearn-color-background);
+}
+
+/* Toggleable label */
+#sk-container-id-5 label.sk-toggleable__label {
+  cursor: pointer;
+  display: flex;
+  width: 100%;
+  margin-bottom: 0;
+  padding: 0.5em;
+  box-sizing: border-box;
+  text-align: center;
+  align-items: start;
+  justify-content: space-between;
+  gap: 0.5em;
+}
+
+#sk-container-id-5 label.sk-toggleable__label .caption {
+  font-size: 0.6rem;
+  font-weight: lighter;
+  color: var(--sklearn-color-text-muted);
+}
+
+#sk-container-id-5 label.sk-toggleable__label-arrow:before {
+  /* Arrow on the left of the label */
+  content: "▸";
+  float: left;
+  margin-right: 0.25em;
+  color: var(--sklearn-color-icon);
+}
+
+#sk-container-id-5 label.sk-toggleable__label-arrow:hover:before {
+  color: var(--sklearn-color-text);
+}
+
+/* Toggleable content - dropdown */
+
+#sk-container-id-5 div.sk-toggleable__content {
+  max-height: 0;
+  max-width: 0;
+  overflow: hidden;
+  text-align: left;
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-0);
+}
+
+#sk-container-id-5 div.sk-toggleable__content.fitted {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-0);
+}
+
+#sk-container-id-5 div.sk-toggleable__content pre {
+  margin: 0.2em;
+  border-radius: 0.25em;
+  color: var(--sklearn-color-text);
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-0);
+}
+
+#sk-container-id-5 div.sk-toggleable__content.fitted pre {
+  /* unfitted */
+  background-color: var(--sklearn-color-fitted-level-0);
+}
+
+#sk-container-id-5 input.sk-toggleable__control:checked~div.sk-toggleable__content {
+  /* Expand drop-down */
+  max-height: 200px;
+  max-width: 100%;
+  overflow: auto;
+}
+
+#sk-container-id-5 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {
+  content: "▾";
+}
+
+/* Pipeline/ColumnTransformer-specific style */
+
+#sk-container-id-5 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  color: var(--sklearn-color-text);
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+#sk-container-id-5 div.sk-label.fitted input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+/* Estimator-specific style */
+
+/* Colorize estimator box */
+#sk-container-id-5 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+#sk-container-id-5 div.sk-estimator.fitted input.sk-toggleable__control:checked~label.sk-toggleable__label {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+#sk-container-id-5 div.sk-label label.sk-toggleable__label,
+#sk-container-id-5 div.sk-label label {
+  /* The background is the default theme color */
+  color: var(--sklearn-color-text-on-default-background);
+}
+
+/* On hover, darken the color of the background */
+#sk-container-id-5 div.sk-label:hover label.sk-toggleable__label {
+  color: var(--sklearn-color-text);
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+/* Label box, darken color on hover, fitted */
+#sk-container-id-5 div.sk-label.fitted:hover label.sk-toggleable__label.fitted {
+  color: var(--sklearn-color-text);
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+/* Estimator label */
+
+#sk-container-id-5 div.sk-label label {
+  font-family: monospace;
+  font-weight: bold;
+  display: inline-block;
+  line-height: 1.2em;
+}
+
+#sk-container-id-5 div.sk-label-container {
+  text-align: center;
+}
+
+/* Estimator-specific */
+#sk-container-id-5 div.sk-estimator {
+  font-family: monospace;
+  border: 1px dotted var(--sklearn-color-border-box);
+  border-radius: 0.25em;
+  box-sizing: border-box;
+  margin-bottom: 0.5em;
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-0);
+}
+
+#sk-container-id-5 div.sk-estimator.fitted {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-0);
+}
+
+/* on hover */
+#sk-container-id-5 div.sk-estimator:hover {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-2);
+}
+
+#sk-container-id-5 div.sk-estimator.fitted:hover {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-2);
+}
+
+/* Specification for estimator info (e.g. "i" and "?") */
+
+/* Common style for "i" and "?" */
+
+.sk-estimator-doc-link,
+a:link.sk-estimator-doc-link,
+a:visited.sk-estimator-doc-link {
+  float: right;
+  font-size: smaller;
+  line-height: 1em;
+  font-family: monospace;
+  background-color: var(--sklearn-color-background);
+  border-radius: 1em;
+  height: 1em;
+  width: 1em;
+  text-decoration: none !important;
+  margin-left: 0.5em;
+  text-align: center;
+  /* unfitted */
+  border: var(--sklearn-color-unfitted-level-1) 1pt solid;
+  color: var(--sklearn-color-unfitted-level-1);
+}
+
+.sk-estimator-doc-link.fitted,
+a:link.sk-estimator-doc-link.fitted,
+a:visited.sk-estimator-doc-link.fitted {
+  /* fitted */
+  border: var(--sklearn-color-fitted-level-1) 1pt solid;
+  color: var(--sklearn-color-fitted-level-1);
+}
+
+/* On hover */
+div.sk-estimator:hover .sk-estimator-doc-link:hover,
+.sk-estimator-doc-link:hover,
+div.sk-label-container:hover .sk-estimator-doc-link:hover,
+.sk-estimator-doc-link:hover {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-3);
+  color: var(--sklearn-color-background);
+  text-decoration: none;
+}
+
+div.sk-estimator.fitted:hover .sk-estimator-doc-link.fitted:hover,
+.sk-estimator-doc-link.fitted:hover,
+div.sk-label-container:hover .sk-estimator-doc-link.fitted:hover,
+.sk-estimator-doc-link.fitted:hover {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-3);
+  color: var(--sklearn-color-background);
+  text-decoration: none;
+}
+
+/* Span, style for the box shown on hovering the info icon */
+.sk-estimator-doc-link span {
+  display: none;
+  z-index: 9999;
+  position: relative;
+  font-weight: normal;
+  right: .2ex;
+  padding: .5ex;
+  margin: .5ex;
+  width: min-content;
+  min-width: 20ex;
+  max-width: 50ex;
+  color: var(--sklearn-color-text);
+  box-shadow: 2pt 2pt 4pt #999;
+  /* unfitted */
+  background: var(--sklearn-color-unfitted-level-0);
+  border: .5pt solid var(--sklearn-color-unfitted-level-3);
+}
+
+.sk-estimator-doc-link.fitted span {
+  /* fitted */
+  background: var(--sklearn-color-fitted-level-0);
+  border: var(--sklearn-color-fitted-level-3);
+}
+
+.sk-estimator-doc-link:hover span {
+  display: block;
+}
+
+/* "?"-specific style due to the `<a>` HTML tag */
+
+#sk-container-id-5 a.estimator_doc_link {
+  float: right;
+  font-size: 1rem;
+  line-height: 1em;
+  font-family: monospace;
+  background-color: var(--sklearn-color-background);
+  border-radius: 1rem;
+  height: 1rem;
+  width: 1rem;
+  text-decoration: none;
+  /* unfitted */
+  color: var(--sklearn-color-unfitted-level-1);
+  border: var(--sklearn-color-unfitted-level-1) 1pt solid;
+}
+
+#sk-container-id-5 a.estimator_doc_link.fitted {
+  /* fitted */
+  border: var(--sklearn-color-fitted-level-1) 1pt solid;
+  color: var(--sklearn-color-fitted-level-1);
+}
+
+/* On hover */
+#sk-container-id-5 a.estimator_doc_link:hover {
+  /* unfitted */
+  background-color: var(--sklearn-color-unfitted-level-3);
+  color: var(--sklearn-color-background);
+  text-decoration: none;
+}
+
+#sk-container-id-5 a.estimator_doc_link.fitted:hover {
+  /* fitted */
+  background-color: var(--sklearn-color-fitted-level-3);
+}
+</style><div id="sk-container-id-5" class="sk-top-container"><div class="sk-text-repr-fallback"><pre>GridSearchCV(cv=5, estimator=DecisionTreeClassifier(random_state=42), n_jobs=-1,
+             param_grid={&#x27;class_weight&#x27;: [None, &#x27;balanced&#x27;],
+                         &#x27;max_depth&#x27;: [3, 5, 7, 10, 15],
+                         &#x27;min_samples_leaf&#x27;: [1, 2, 5, 10],
+                         &#x27;min_samples_split&#x27;: [2, 5, 10, 20]},
+             scoring=&#x27;f1_macro&#x27;)</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br />On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class="sk-container" hidden><div class="sk-item sk-dashed-wrapped"><div class="sk-label-container"><div class="sk-label fitted sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-5" type="checkbox" ><label for="sk-estimator-id-5" class="sk-toggleable__label fitted sk-toggleable__label-arrow"><div><div>GridSearchCV</div></div><div><a class="sk-estimator-doc-link fitted" rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.6/modules/generated/sklearn.model_selection.GridSearchCV.html">?<span>Documentation for GridSearchCV</span></a><span class="sk-estimator-doc-link fitted">i<span>Fitted</span></span></div></label><div class="sk-toggleable__content fitted"><pre>GridSearchCV(cv=5, estimator=DecisionTreeClassifier(random_state=42), n_jobs=-1,
+             param_grid={&#x27;class_weight&#x27;: [None, &#x27;balanced&#x27;],
+                         &#x27;max_depth&#x27;: [3, 5, 7, 10, 15],
+                         &#x27;min_samples_leaf&#x27;: [1, 2, 5, 10],
+                         &#x27;min_samples_split&#x27;: [2, 5, 10, 20]},
+             scoring=&#x27;f1_macro&#x27;)</pre></div> </div></div><div class="sk-parallel"><div class="sk-parallel-item"><div class="sk-item"><div class="sk-label-container"><div class="sk-label fitted sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-6" type="checkbox" ><label for="sk-estimator-id-6" class="sk-toggleable__label fitted sk-toggleable__label-arrow"><div><div>best_estimator_: DecisionTreeClassifier</div></div></label><div class="sk-toggleable__content fitted"><pre>DecisionTreeClassifier(max_depth=10, min_samples_leaf=10, random_state=42)</pre></div> </div></div><div class="sk-serial"><div class="sk-item"><div class="sk-estimator fitted sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-7" type="checkbox" ><label for="sk-estimator-id-7" class="sk-toggleable__label fitted sk-toggleable__label-arrow"><div><div>DecisionTreeClassifier</div></div><div><a class="sk-estimator-doc-link fitted" rel="noreferrer" target="_blank" href="https://scikit-learn.org/1.6/modules/generated/sklearn.tree.DecisionTreeClassifier.html">?<span>Documentation for DecisionTreeClassifier</span></a></div></label><div class="sk-toggleable__content fitted"><pre>DecisionTreeClassifier(max_depth=10, min_samples_leaf=10, random_state=42)</pre></div> </div></div></div></div></div></div></div></div></div>
+
+
+
+
+```python
+# Display the best parameter settings found by the grid search model.
+grid_model5.best_params_
+```
+
+
+
+
+    {'class_weight': None,
+     'max_depth': 10,
+     'min_samples_leaf': 10,
+     'min_samples_split': 2}
+
+
+
+
+```python
+# Display the best f1 score achieved by the grid search model.
+print(f"F1 Score: {grid_model5.best_score_: .2f}")
+```
+
+    F1 Score:  0.58
+
+
+
+```python
+# Use the best estimator from the grid search to make predictions on the test set and evaluate its performance.
+tree_model5 = grid_model5.best_estimator_
+
+y_prediction_model5 = tree_model5.predict(X_test)
+```
+
+
+```python
+# Evaluate the model's performance using classification report and accuracy score.
+print(classification_report(y_test, y_prediction_model5))
+print(f'Accuracy: {accuracy_score(y_test, y_prediction_model5):.2f}')
+```
+
+                  precision    recall  f1-score   support
+    
+               0       0.68      0.64      0.66      8467
+               1       0.75      0.80      0.77     11122
+               2       0.52      0.22      0.31       411
+    
+        accuracy                           0.72     20000
+       macro avg       0.65      0.55      0.58     20000
+    weighted avg       0.71      0.72      0.72     20000
+    
+    Accuracy: 0.72
+
+
+
+```python
+import shap
+
+# Use a sample so SHAP runs faster
+X_sample = X_test_scaled[:1000]
+
+# Create SHAP explainer for logistic regression model
+explainer = shap.Explainer(
+    model2,
+    X_train_scaled,
+    max_samples = int(len(X_train_scaled) * 0.5)
+)
+
+# Calculate SHAP values
+shap_values = explainer(X_sample)
+
+# Summary plot
+shap.summary_plot(shap_values, X_sample, feature_names=X.columns)
+```
+
+    Background dataset has 80000 samples but max_samples=100. Subsampling to 100 samples for SHAP value computation. To use all samples, set max_samples=80000 when initializing the masker.
+
+
+
+    
+![png](prompt_files/prompt_85_1.png)
+    
+
+
+    Exception ignored in: <function ResourceTracker.__del__ at 0x10616d9e0>
+    Traceback (most recent call last):
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 84, in __del__
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 93, in _stop
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 118, in _stop_locked
+    ChildProcessError: [Errno 10] No child processes
+    Exception ignored in: <function ResourceTracker.__del__ at 0x1076859e0>
+    Traceback (most recent call last):
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 84, in __del__
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 93, in _stop
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 118, in _stop_locked
+    ChildProcessError: [Errno 10] No child processes
+    Exception ignored in: <function ResourceTracker.__del__ at 0x106cc19e0>
+    Traceback (most recent call last):
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 84, in __del__
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 93, in _stop
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 118, in _stop_locked
+    ChildProcessError: [Errno 10] No child processes
+    Exception ignored in: <function ResourceTracker.__del__ at 0x104d219e0>
+    Traceback (most recent call last):
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 84, in __del__
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 93, in _stop
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 118, in _stop_locked
+    ChildProcessError: [Errno 10] No child processes
+    Exception ignored in: <function ResourceTracker.__del__ at 0x1034c19e0>
+    Traceback (most recent call last):
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 84, in __del__
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 93, in _stop
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 118, in _stop_locked
+    ChildProcessError: [Errno 10] No child processes
+    Exception ignored in: <function ResourceTracker.__del__ at 0x1030459e0>
+    Traceback (most recent call last):
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 84, in __del__
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 93, in _stop
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 118, in _stop_locked
+    ChildProcessError: [Errno 10] No child processes
+    Exception ignored in: <function ResourceTracker.__del__ at 0x1040459e0>
+    Traceback (most recent call last):
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 84, in __del__
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 93, in _stop
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 118, in _stop_locked
+    ChildProcessError: [Errno 10] No child processes
+    Exception ignored in: <function ResourceTracker.__del__ at 0x106f6d9e0>
+    Traceback (most recent call last):
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 84, in __del__
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 93, in _stop
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 118, in _stop_locked
+    ChildProcessError: [Errno 10] No child processes
+    Exception ignored in: <function ResourceTracker.__del__ at 0x1045019e0>
+    Traceback (most recent call last):
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 84, in __del__
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 93, in _stop
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 118, in _stop_locked
+    ChildProcessError: [Errno 10] No child processes
+    Exception ignored in: <function ResourceTracker.__del__ at 0x1067719e0>
+    Traceback (most recent call last):
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 84, in __del__
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 93, in _stop
+      File "/opt/anaconda3/lib/python3.13/multiprocessing/resource_tracker.py", line 118, in _stop_locked
+    ChildProcessError: [Errno 10] No child processes
+
+
+# Findings
+
+I started this project with one main question: can early-stage startup factors help predict whether a startup will succeed or fail? The results suggest that they can, but with some important limitations.
+
+First, I explored the data and found that several features which include market size, revenue, burn rate, and product traction, were heavily skewed. Initially, these distributions were assummed to be errors in the data. However, after performing logarithmic transformations and evaluating the variables through Model 3, I found evidence of the contrary.
+
+Log transformations made the distributions easier to compare, but they did not improve prediction accuracy. This showed that previous models were already handling those features reasonably well.
+
+I built and compared 5 different models. The strongest result came from Model 2, a Logistic Regression model with scaled features. Model 2 achieved approximately 74% accuracy. 
+
+In hopes of finding nonlinear relationships in the data and improving the prediction capabilities, a Decision Tree model was also tested and tuned with GridSearchCV. Surprisingly, it did not outperform Logistic Regression.
+
+To better understand the model's decisions, I used SHAP (SHapley Additive exPlanations) analysis. This showed that startup sector, funding rounds, founder experience, investor quality, and team size had the greatest influence on predictions. Revenue, product traction, and burn rate were less influential than expected; which was incredibly surprising.
+
+The biggest limitation of this dataset was the IPO class. IPOs made up ~2% of the dataset, and every model struggled to predict this outcome class accurately. This suggests the model was better at identifying broad startup success than distinguishing between different types of successful outcomes.
+
+Future work could address this limitation by reframing the problem as a binary classification task. By combining acquisitions and IPOs into a single "Success" category, I'd create a more balanced target variable (outcome), which may lead to improved predictive performance. This can be done while remaining aligned with the practical goal of identifying startup success.
+
+Overall, these findings suggest that early-stage factors can be useful in determining startup outcomes. For stakeholders making business decisions in respect to financial gain, the most valuable takeaway is that multiple factors appear to be stronger indicators of a startup's success than the intuitive factors of revenue or traction alone.
