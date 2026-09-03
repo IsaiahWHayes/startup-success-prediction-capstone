@@ -1,14 +1,24 @@
 # Import libraries and packages
 from pathlib import Path
-from fastapi import FastAPI
-import joblib
-
 from typing import Literal
-from pydantic import BaseModel, Field
+
+import joblib
 import pandas as pd
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
 
 # Save FastAPI to a variable called "app"
 app = FastAPI()
+
+# Add CORS middleware that allows requests from my specified origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins = ["http://localhost:5500"],
+    allow_credentials = True,
+    allow_methods = ["*"],
+    allow_headers = ["*"]
+)
 
 # Define a Pydantic model for the input data
 class StartupInput(BaseModel):
