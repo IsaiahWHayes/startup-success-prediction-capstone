@@ -1,0 +1,5 @@
+data/
+.ipynb_checkpoints/
+web_renders/
+*.ipynb
+README.md
